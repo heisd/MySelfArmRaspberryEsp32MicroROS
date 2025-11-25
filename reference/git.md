@@ -36,3 +36,12 @@
     git commit -m "movevirtualdir"
     git push -u myself liquanyan --force
 ```
+## 安利一款git如果出现问题的好用的工具
+```bash
+    pip install git-filter-repo --break-system-packages
+    ~/.local/bin/git-filter-repo --path Camera/ --invert-paths --force
+    git commit -m "robot"
+     git push -u myself li --force
+···
+
+
