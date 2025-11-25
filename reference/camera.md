@@ -11,9 +11,9 @@ cd src
 ros2 pkg create --build-type ament_python my_arm_vision --dependencies rclpy sensor_msgs geometry_msgs cv_bridge
 ```
 ## 3.编写物体检测节点，并解决Opencv库的依赖
-解决opencv库的依赖
+解决opencv库的依赖,这里我们的python版本是3.12.3
 ```bash
-    sudo pip3 install python-opencv
+    pip install opencv-python
 ```
 <font color ="red">> sudo pip3 install python-opencv
 error: externally-managed-environment
@@ -37,19 +37,30 @@ error: externally-managed-environment
 note: If you believe this is a mistake, please contact your Python installation or OS distribution provider. You can override this, at the risk of breaking your Python installation or OS, by passing --break-system-packages.
 hint: See PEP 668 for the detailed specification.</font>
 
-终端出现这个问题我们直接使用虚拟环境来解决这个问题,注意虚拟环境要和src目录同级
+终端出现这个问题我们直接使用虚拟环境来解决这个问题,注意虚拟环境要和src目录同级,防止污染ROS2包环境
 ```bash
     cd ~/Desptop/robot
     python3 -m venv Camera
+    # 激活虚拟环境
+    source Camera/bin/activate
 ```
+之后再运行
+```bash
+    pip install opencv-python
+```
+注意使用虚拟环境之后就不要在使用sudo pip3了这个命令是要安装在系统下的目录
 ### 版本一简单的物体追踪
 文件内容如下
 [object_detector.py](../src/my_arm_vision/my_arm_vision/object_detector.py)
+代码解释如下:
+
+dataclasses模块化：[dataclasses](./dataclasses.md)</br>
+cv_bridge构建从opencv/yolo传入的numpy到ros系统接收的sensor_msgs/Image:[cv_bridge](./cv_bridge.md)</br>
+
+
 ### 版本二YOLO版本的检测物体,需要处理好Yolo版本的依赖关系
 ```bash
-
-
-
+pip install ultralytics numpy
 ```
 文件内容如下
 [yolo_detector.py](../src/my_arm_vision/my_arm_vision/yolo_detector.py)
