@@ -1,4 +1,4 @@
-# 本文是树莓派上摄像头的使用
+# 本文是树莓派上摄像头配合机械臂来抓取物体的使用
 ## 1.因为我们的摄像头是免驱动的，所以不需要安装相应驱动,安装ROS2摄像头包
 ```bash
 sudo apt install ros-jazzy-usb-cam ros-jazzy-image-transport ros-jazzy-cv-bridge
