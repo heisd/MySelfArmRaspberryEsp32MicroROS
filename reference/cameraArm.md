@@ -52,18 +52,32 @@ hint: See PEP 668 for the detailed specification.</font>
 ### 版本一简单的物体追踪
 文件内容如下
 [object_detector.py](../src/my_arm_vision/my_arm_vision/object_detector.py)
-代码解释如下:
-
-dataclasses模块化：[dataclasses](./dataclasses.md)</br>
-cv_bridge构建从opencv/yolo传入的numpy到ros系统接收的sensor_msgs/Image:[cv_bridge](./cv_bridge.md)</br>
-
-
-### 版本二YOLO版本的检测物体,需要处理好Yolo版本的依赖关系
+### 版本二YOLO版本的检测物体,需要处理好Yolo版本的依赖关系，更高级一点
 ```bash
 pip install ultralytics numpy
 ```
+终端输出这个问题:(这是一个常见的冲突)
+<font color="red">ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+generate-parameter-library-py 0.5.0 requires typeguard, which is not installed.</font></br>
+
+安装缺失的依赖
+```bash
+    pip install typeguard --break-system-packages
+```
 文件内容如下
 [yolo_detector.py](../src/my_arm_vision/my_arm_vision/yolo_detector.py)
+
+代码解释如下:</br>
+dataclasses模块化：[dataclasses](./dataclasses.md)</br>
+cv_bridge构建从opencv/yolo传入的numpy到ros系统接收的sensor_msgs/Image:[cv_bridge](./cv_bridge.md)</br>
+
+## 下面就开始编写手眼标定节点，因为我们要通过的摄像头的位置来获得末端坐标的位置，需要手眼标定来对这两个坐标进行转换
+文件内容如下
+[hand_eye_calibration](../src/my_arm_vision/my_arm_vision/hand_eye_calibration.py)
+## 下面就
+
+
+
 
 
 
