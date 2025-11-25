@@ -31,8 +31,8 @@
 ```    
 ## 这里由于本人刚刚开始把虚拟环境添加进去了，使用这个可以去除在.git里面添加的文件，并且重新提交
 ```bash
-    git rm -r --cached Camera/
+    echo "Camera/" >> .gitignore
+    git rm -r --cached Camera/  
     git commit -m "movevirtualdir"
     git push -u myself liquanyan --force
-
 ```
