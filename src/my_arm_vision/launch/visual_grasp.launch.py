@@ -9,7 +9,9 @@ def generate_launch_description():
         # 参数
         DeclareLaunchArgument('camera_device', default_value='/dev/video0'),
         
-        # 1. micro-ROS Agent
+        # 1. micro-ROS Agent serial mode 
+        # 在终端上运行ros2 run micro_ros_agent micro_ros_agent serial --dev/ttyUSB0 -b 115200
+        
         Node(
             package='micro_ros_agent',
             executable='micro_ros_agent',

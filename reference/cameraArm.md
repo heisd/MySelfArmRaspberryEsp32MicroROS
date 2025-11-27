@@ -74,7 +74,49 @@ cv_bridge构建从opencv/yolo传入的numpy到ros系统接收的sensor_msgs/Imag
 ## 下面就开始编写手眼标定节点，因为我们要通过的摄像头的位置来获得末端坐标的位置，需要手眼标定来对这两个坐标进行转换
 文件内容如下
 [hand_eye_calibration](../src/my_arm_vision/my_arm_vision/hand_eye_calibration.py)
-## 下面就
+## 下面就开始编写视觉识别抓取器
+文件内容如下
+[visual_grasp_controlled](../src/my_arm_vision/my_arm_vision/visual_grasp_controller.py)
+下面是对该文件的详解
+## 下面把这几个文件给他综合写一个launch文件
+文件内容如下
+[launch](../src/my_arm_vision/launch/visual_grasp.launch.py)
+下面是对该文件的详解
+- Node
+```python
+    Node(
+            package='micro_ros_agent',
+            executable='micro_ros_agent',
+            arguments=['serial', '--dev', '/dev/ttyUSB0', '-b', '115200'],
+            output='screen'
+        ),
+```
+等价于终端上运行
+```bash
+ros2 run micro_ros_agent micro_ros_agent serial --dev/ttyUSB0 -b 115200
+```
+output =‘screen'
+就是把结果输出到终端上面
+下面的Node(
+    ...
+),等都是这个意思
+- remappings
+```python
+remappings=[
+                ('image_raw', '/camera/image_raw'),
+            ]
+```
+重映射将前面的话题名字->后面的话题名(更改为我们想要的话题名字)
+- parameters(常见的参数就不多介绍)
+
+```python
+'pixel_format':'yuyv'
+```
+## 如果感觉上面的有点繁琐可以先试一下demo可不可以运行起来
+文件内容如下
+[demo](../src/my_arm_vision/my_arm_vision/demo.py)
+
+
 
 
 

@@ -1,0 +1,6 @@
+source;share/my_arm_vision/hook/pythonpath.dsv
+source;share/my_arm_vision/hook/pythonpath.sh
+source;share/my_arm_vision/hook/ament_prefix_path.dsv
+source;share/my_arm_vision/hook/ament_prefix_path.sh
+source;../../build/my_arm_vision/share/my_arm_vision/hook/pythonpath_develop.dsv
+source;../../build/my_arm_vision/share/my_arm_vision/hook/pythonpath_develop.sh
