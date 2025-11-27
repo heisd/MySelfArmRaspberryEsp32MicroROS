@@ -1,4 +1,9 @@
 # 本文是树莓派上摄像头配合机械臂来抓取物体的使用
+快速测试摄像头是否正常(需在本机上使用这个)
+```bash
+sudo apt install cheese
+cheese
+```
 ## 1.因为我们的摄像头是免驱动的，所以不需要安装相应驱动,安装ROS2摄像头包
 ```bash
 sudo apt install ros-jazzy-usb-cam ros-jazzy-image-transport ros-jazzy-cv-bridge
@@ -71,13 +76,16 @@ generate-parameter-library-py 0.5.0 requires typeguard, which is not installed.<
 dataclasses模块化：[dataclasses](./dataclasses.md)</br>
 cv_bridge构建从opencv/yolo传入的numpy到ros系统接收的sensor_msgs/Image:[cv_bridge](./cv_bridge.md)</br>
 
+
+
 ## 下面就开始编写手眼标定节点，因为我们要通过的摄像头的位置来获得末端坐标的位置，需要手眼标定来对这两个坐标进行转换
 文件内容如下
 [hand_eye_calibration](../src/my_arm_vision/my_arm_vision/hand_eye_calibration.py)
+代码解释如下:</br>
 ## 下面就开始编写视觉识别抓取器
 文件内容如下
 [visual_grasp_controlled](../src/my_arm_vision/my_arm_vision/visual_grasp_controller.py)
-下面是对该文件的详解
+代码解释如下:</br>
 ## 下面把这几个文件给他综合写一个launch文件
 文件内容如下
 [launch](../src/my_arm_vision/launch/visual_grasp.launch.py)
@@ -108,10 +116,63 @@ remappings=[
 ```
 重映射将前面的话题名字->后面的话题名(更改为我们想要的话题名字)
 - parameters(常见的参数就不多介绍)
+```bash
+    # 1.列出所有的视频设备
+    sudo v4l2-ctl --list-devices
+    # 2.找到我们的摄像头
+    WebCamera: WebCamera (usb-xhci-hcd.0-2):
+        /dev/video0 #摄像头
+        /dev/video1 #麦克风
+        /dev/media3
+    # 3.检测摄像头支持的格式
+    sudo v4l2-ctl --list-formats-ext -d /dev/video0
+    # output
+    ioctl: VIDIOC_ENUM_FMT
+        Type: Video Capture
 
-```python
-'pixel_format':'yuyv'
+        [0]: 'MJPG' (Motion-JPEG, compressed)
+                Size: Discrete 1920x1080
+                        Interval: Discrete 0.033s (30.000 fps)
+                Size: Discrete 1280x960
+                        Interval: Discrete 0.033s (30.000 fps)
+                Size: Discrete 1280x720
+                        Interval: Discrete 0.033s (30.000 fps)
+                Size: Discrete 800x600
+                        Interval: Discrete 0.033s (30.000 fps)
+                Size: Discrete 640x480
+                        Interval: Discrete 0.033s (30.000 fps)
+                Size: Discrete 640x360
+                        Interval: Discrete 0.033s (30.000 fps)
+        [1]: 'YUYV' (YUYV 4:2:2)
+                Size: Discrete 1920x1080
+                        Interval: Discrete 0.200s (5.000 fps)
+                Size: Discrete 1280x960
+                        Interval: Discrete 0.200s (5.000 fps)
+                Size: Discrete 1280x720
+                        Interval: Discrete 0.100s (10.000 fps)
+                Size: Discrete 800x600
+                        Interval: Discrete 0.050s (20.000 fps)
+                Size: Discrete 640x480
+                        Interval: Discrete 0.033s (30.000 fps)
+                Size: Discrete 640x360
+                        Interval: Discrete 0.033s (30.000 fps)    
 ```
+根据这个输出选择格式为 mjpeg 的格式
+```python
+'pixel_format':'mjpeg'
+```
+- TimeAction :ROS2中的延时启动功能,防止这些部分缺少依赖,period是等待的时长
+```python
+TimeAction(
+    period=2.0,
+    action=[
+        Node(
+            ...
+        ),
+    ]
+)
+```
+这样可以确保各个节点按正确顺序启动，避免因依赖未就绪而报错。
 ## 如果感觉上面的有点繁琐可以先试一下demo可不可以运行起来
 文件内容如下
 [demo](../src/my_arm_vision/my_arm_vision/demo.py)

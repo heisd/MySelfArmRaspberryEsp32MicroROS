@@ -3,6 +3,8 @@
 ```bash
     # 注意在虚拟环境中要添加colcon ignore
     touch Camera/COLCON_IGNORE
+    # 让编译不报警告,在resource文件夹里面写成这种
+    touch ~/Desktop/robot/src/my_arm_vision/resource/my_arm_vision
     # 在src上级目录编译
     cd ~/Desktop/robot
     # 全部编译
