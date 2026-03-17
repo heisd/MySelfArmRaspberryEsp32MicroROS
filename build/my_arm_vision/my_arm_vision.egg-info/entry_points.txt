@@ -1,3 +1,0 @@
-[console_scripts]
-object_detector = my_arm_vision.object_detector:main
-simple_visual_grasp = my_arm_vision.simple_visual_grasp:main
