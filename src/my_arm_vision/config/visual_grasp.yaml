@@ -1,0 +1,25 @@
+visual_grasp_controller:
+  ros__parameters:
+    approach_distance: 0.08      # 接近距离（米）
+    grasp_height_offset: 0.02    # 抓取高度偏移（米）
+    lift_height: 0.10            # 提起高度（米）
+    place_position:
+      - 0.15
+      - 0.15
+      - 0.05
+
+simple_visual_grasp:
+  ros__parameters:
+    # 相机内参（根据实际标定结果修改）
+    fx: 600.0
+    fy: 600.0
+    cx: 320.0
+    cy: 240.0
+    # 相机安装位置（相对基座，单位：米）
+    cam_x: 0.0
+    cam_y: 0.20
+    cam_z: 0.40
+    # 放置目标位置
+    place_x: 0.15
+    place_y: 0.12
+    place_z: 0.05

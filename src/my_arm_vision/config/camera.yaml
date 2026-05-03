@@ -1,0 +1,19 @@
+# 相机内参配置（通过 camera_calibration 标定后填入）
+# 运行标定：ros2 run camera_calibration cameracalibrator --size 8x6 --square 0.025
+
+camera_matrix:
+  rows: 3
+  cols: 3
+  data: [600.0, 0.0, 320.0,
+         0.0, 600.0, 240.0,
+         0.0, 0.0, 1.0]
+
+distortion_coefficients:
+  rows: 1
+  cols: 5
+  data: [0.0, 0.0, 0.0, 0.0, 0.0]
+
+image_width: 640
+image_height: 480
+camera_name: usb_camera
+distortion_model: plumb_bob
