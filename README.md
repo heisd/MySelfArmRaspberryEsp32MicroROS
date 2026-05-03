@@ -6,7 +6,8 @@
 ![micro-ROS](https://img.shields.io/badge/micro--ROS-ESP32--S3-orange.svg)
 
 基于 **树莓派 5B + ESP32-S3 + ROS2 Jazzy** 的桌面机械臂视觉抓取系统。  
-摄像头实时识别目标物体，通过 micro-ROS 驱动 PCA9685 舵机控制器完成抓取动作。
+摄像头实时识别目标物体颜色，通过 micro-ROS WiFi 驱动 PCA9685 舵机控制器完成抓取动作。  
+内置 **Web 仪表盘**，浏览器即可实时查看画面并控制机械臂。
 
 ---
 
@@ -16,7 +17,7 @@
 |------|------|------|
 | 主控计算机 | Raspberry Pi 5B | 运行 ROS2，负责感知与规划 |
 | 微控制器 | ESP32-S3 | 运行 micro-ROS，驱动舵机 |
-| 舵机控制器 | PCA9685 | 16 通道 PWM，I²C 接口（GPIO 8/9） |
+| 舵机控制器 | PCA9685 | 16 通道 PWM，I²C 接口（SDA=GPIO8 / SCL=GPIO9） |
 | 摄像头 | USB 摄像头 | 640×480，30fps，MJPEG |
 
 硬件原理图：[`hardware/schematics/ESP32-S3-SCH.jpg`](hardware/schematics/ESP32-S3-SCH.jpg)
@@ -26,27 +27,29 @@
 ## 系统架构
 
 ```
-[USB Camera]
-     │ /camera/image_raw
-     ▼
-┌─────────────────────────────────┐
-│         Raspberry Pi 5B         │
-│                                 │
-│  ObjectDetector / YOLODetector  │
-│          │ /target_object_pose  │
-│          ▼                      │
-│  VisualGraspController          │
-│          │ /joint_commands      │
-└──────────┼──────────────────────┘
-           │ WiFi (micro-ROS)
-           ▼
-     [ESP32-S3]
-           │ I²C
-           ▼
-      [PCA9685]
-           │ PWM
-           ▼
-       [Servos]
+┌──────────────────────────────────────────────────────────┐
+│                    Raspberry Pi 5B                        │
+│                                                           │
+│  [USB Camera] ──/camera/image_raw──▶ ArmGraspNode        │
+│                                          │                │
+│                                   HSV 颜色检测            │
+│                                   像素 → 基座坐标         │
+│                                   4-DOF 解析 IK           │
+│                                          │                │
+│                             /servo_commands (0–180°)      │
+│                                          │                │
+│  [Browser] ◀──── ArmDashboardNode ◀─────┤                │
+│  http://<IP>:5000   (Flask MJPEG)   /arm_state            │
+└──────────────────────────────────────────┼───────────────┘
+                                           │ WiFi (micro-ROS)
+                                           ▼
+                                      [ESP32-S3]
+                                           │ I²C
+                                           ▼
+                                      [PCA9685]
+                                           │ PWM ×16
+                                           ▼
+                                        [舵机]
 ```
 
 ---
@@ -58,17 +61,17 @@ MySelfArmRaspberryEsp32MicroROS/
 ├── firmware/
 │   └── arduino/
 │       ├── Arduino.ino          # ESP32-S3 micro-ROS 固件
-│       └── config.h.example     # WiFi / Agent 配置模板
+│       └── config.h.example     # WiFi / Agent 配置模板（复制为 config.h 后填写）
 ├── hardware/
 │   └── schematics/              # 硬件原理图
 ├── scripts/
-│   └── download_yolov8n.py      # YOLOv8n 模型下载
+│   └── download_yolov8n.py      # YOLOv8n 模型下载脚本
 ├── src/
 │   └── my_arm_vision/           # ROS2 视觉抓取包
 │       ├── config/              # 节点参数配置（YAML）
 │       ├── launch/              # 启动文件
 │       ├── my_arm_vision/       # Python 源码
-│       └── README.md
+│       └── README.md            # 包级详细文档
 ├── docs/
 │   ├── model-download.md
 │   └── reference/               # 技术参考文档
@@ -83,8 +86,12 @@ MySelfArmRaspberryEsp32MicroROS/
 
 ### 环境要求
 
-- **树莓派**：ROS2 Jazzy，Ubuntu 24.04 / Raspberry Pi OS
-- **ESP32-S3**：Arduino IDE + micro-ROS Arduino 库
+| 环境 | 要求 |
+|------|------|
+| 操作系统 | Ubuntu 24.04 / Raspberry Pi OS（64-bit） |
+| ROS2 | Jazzy |
+| Python | 3.10+ |
+| ESP32 固件 | Arduino IDE + micro-ROS Arduino 库 |
 
 ### 1. 克隆仓库
 
@@ -93,81 +100,121 @@ git clone https://github.com/heisd/MySelfArmRaspberryEsp32MicroROS.git
 cd MySelfArmRaspberryEsp32MicroROS
 ```
 
-### 2. 安装 ROS2 依赖
+### 2. 安装依赖
 
 ```bash
+# ROS2 包
 sudo apt install ros-jazzy-usb-cam ros-jazzy-cv-bridge \
                  ros-jazzy-tf2-ros ros-jazzy-rqt-image-view \
                  python3-opencv python3-numpy
 
-# YOLO 支持（可选）
-pip install ultralytics --break-system-packages
-
-# Web 仪表盘支持
+# Web 仪表盘
 pip install flask --break-system-packages
+
+# YOLO 目标检测（可选）
+pip install ultralytics --break-system-packages
 ```
 
-### 3. 下载 YOLOv8 模型（可选）
-
-```bash
-python3 scripts/download_yolov8n.py
-```
-
-### 4. 构建 ROS2 包
+### 3. 构建 ROS2 包
 
 ```bash
 colcon build --symlink-install
 source install/setup.bash
 ```
 
-### 5. 烧录 ESP32-S3 固件
+### 4. 烧录 ESP32-S3 固件
 
 ```bash
-# 复制配置文件并填入实际 WiFi / Agent 信息
+# 从模板创建配置文件，填入真实 WiFi 和树莓派 IP
 cp firmware/arduino/config.h.example firmware/arduino/config.h
-# 编辑 config.h，然后用 Arduino IDE 烧录 Arduino.ino
+# 用 Arduino IDE 打开并烧录 firmware/arduino/Arduino.ino
+```
+
+### 5. 下载 YOLO 模型（可选）
+
+```bash
+python3 scripts/download_yolov8n.py
 ```
 
 ### 6. 启动系统
 
 ```bash
-# 启动 micro-ROS Agent（串口）
-ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyUSB0 -b 115200
+# 一键启动：摄像头 + 检测抓取节点 + Web 仪表盘
+ros2 launch my_arm_vision arm_grasp.launch.py
 
-# 另开终端，一键启动完整视觉抓取系统
-ros2 launch my_arm_vision visual_grasp.launch.py
-
-# 可选：指定摄像头设备
-ros2 launch my_arm_vision visual_grasp.launch.py camera_device:=/dev/video1
+# 可选参数
+ros2 launch my_arm_vision arm_grasp.launch.py \
+  camera_device:=/dev/video0 \
+  target_color:=red
 ```
+
+> 启动后在浏览器打开 **`http://<树莓派IP>:5000`** 即可进入控制仪表盘。
 
 ---
 
-## 参数配置
+## Web 仪表盘
 
-所有节点参数集中在 `src/my_arm_vision/config/`：
-
-| 文件 | 说明 |
+| 功能 | 说明 |
 |------|------|
-| `object_detector.yaml` | 颜色检测参数（颜色列表、面积范围） |
-| `visual_grasp.yaml` | 抓取控制器参数（接近距离、提起高度、放置位置） |
-| `camera.yaml` | 相机内参（标定后填入） |
+| 实时视频流 | MJPEG 画面，显示检测框、3D 坐标、可达性、当前状态 |
+| 颜色选择 | 点击按钮切换目标颜色（红 / 绿 / 蓝 / 黄 / 橙） |
+| 开始 / 停止 | 一键触发抓取任务 |
+| 状态显示 | 实时显示状态机当前阶段（500ms 刷新） |
 
-修改后重新构建或直接编辑（`--symlink-install` 模式下立即生效）。
+REST API 也可供外部程序调用：
+
+```
+GET  /api/status          → {"state": "SEARCHING", "color": "red"}
+POST /api/start           → 开始抓取
+POST /api/stop            → 停止
+POST /api/color/<color>   → 切换颜色
+GET  /video_feed          → MJPEG 流
+```
 
 ---
 
 ## 功能模块
 
-| 模块 | 说明 |
-|------|------|
-| `ObjectDetector` | 基于 HSV 颜色阈值检测指定颜色物体 |
-| `YOLODetector` | YOLOv8 通用物体检测（适配树莓派的 nano 模型） |
-| `SimpleVisualGrasp` | 内置解析 IK 的轻量级抓取节点，无需 MoveIt |
-| `VisualGraspController` | MoveIt 集成的完整抓取控制器 |
-| `HandEyeCalibration` | Eye-to-Hand 棋盘格手眼标定 |
+| 模块 | 可执行文件 | 说明 |
+|------|-----------|------|
+| `ArmGraspNode` | `arm_grasp` | **推荐** 检测 + IK + 舵机直驱，输出直连 ESP32 |
+| `ArmDashboardNode` | `arm_dashboard` | **推荐** Flask Web 仪表盘 |
+| `ObjectDetector` | `object_detector` | 独立 HSV 颜色检测节点 |
+| `YOLODetector` | — | YOLOv8 通用物体检测 |
+| `SimpleVisualGrasp` | `simple_visual_grasp` | 内置 IK 的轻量抓取节点 |
+| `VisualGraspController` | — | MoveIt 集成的完整抓取控制器 |
+| `HandEyeCalibration` | — | Eye-to-Hand 棋盘格手眼标定 |
 
 详见 [`src/my_arm_vision/README.md`](src/my_arm_vision/README.md)。
+
+---
+
+## 参数配置
+
+所有节点参数集中在 `src/my_arm_vision/config/`，`--symlink-install` 构建后修改 YAML 立即生效：
+
+| 文件 | 说明 |
+|------|------|
+| `arm_grasp.yaml` | ArmGraspNode 全部参数（颜色、相机、IK、舵机偏移） |
+| `object_detector.yaml` | 独立颜色检测节点参数 |
+| `visual_grasp.yaml` | MoveIt 抓取控制器参数 |
+| `camera.yaml` | 相机内参模板（标定后填入） |
+
+### 首次使用必须调整的参数（`arm_grasp.yaml`）
+
+```yaml
+# 机械臂连杆长度（米）——按实际 URDF 修改
+link_base: 0.08
+link1: 0.10
+link2: 0.10
+link3: 0.06
+
+# 舵机零点偏移（度）——让 home 姿态时所有舵机输出 90°
+joint_offsets: [90, 90, 90, 90]
+
+# 相机安装高度（米）
+cam_z: 0.40
+```
 
 ---
 
@@ -175,6 +222,7 @@ ros2 launch my_arm_vision visual_grasp.launch.py camera_device:=/dev/video1
 
 | 文档 | 说明 |
 |------|------|
+| [包级详细文档](src/my_arm_vision/README.md) | 所有节点、话题、参数、标定流程 |
 | [摄像头与机械臂流程](docs/reference/cameraArm.md) | 完整搭建流程 |
 | [Arduino / ESP32 说明](docs/reference/Arduino.md) | 固件与硬件说明 |
 | [colcon 常用命令](docs/reference/ColconCommand.md) | 构建与运行参考 |
