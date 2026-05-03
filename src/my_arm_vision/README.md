@@ -27,21 +27,27 @@ cv_bridge  tf2_ros  tf2_geometry_msgs
 usb_cam  micro_ros_agent
 ```
 
-**Python 库**
+**Python 库**（推荐使用虚拟环境统一管理）
 
 ```bash
-# 必须
-sudo apt install python3-opencv python3-numpy
+# 在仓库根目录创建虚拟环境（必须加 --system-site-packages）
+python3 -m venv --system-site-packages .venv
+source .venv/bin/activate
 
-# Web 仪表盘（arm_dashboard）
-pip install flask --break-system-packages
-
-# YOLO 检测（yolo_detector）
-pip install ultralytics --break-system-packages
-
-# 手眼标定（hand_eye_calibration）
-pip install scipy --break-system-packages
+# 一次安装所有 Python 依赖
+pip install -r requirements.txt
 ```
+
+`requirements.txt` 涵盖：
+
+| 库 | 版本要求 | 用途 |
+|----|---------|------|
+| `opencv-python` | ≥ 4.8 | 图像处理、HSV 检测 |
+| `numpy` | ≥ 1.24 | 矩阵运算、IK 计算 |
+| `flask` | ≥ 3.0 | Web 仪表盘 |
+| `ultralytics` | ≥ 8.0 | YOLOv8 推理（可选） |
+| `scipy` | ≥ 1.11 | 手眼标定旋转变换 |
+| `PyYAML` | ≥ 6.0 | 标定结果读写 |
 
 ---
 

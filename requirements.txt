@@ -1,0 +1,44 @@
+# =============================================================
+#  my_arm_vision — Python 依赖
+#
+#  使用虚拟环境（推荐）：
+#
+#    # 必须加 --system-site-packages，否则无法访问 ROS2 系统包
+#    python3 -m venv --system-site-packages .venv
+#    source .venv/bin/activate
+#    pip install -r requirements.txt
+#
+#  注意：ROS2 相关包（rclpy、cv_bridge、sensor_msgs 等）
+#  通过 apt 安装，不在此文件中管理：
+#    sudo apt install ros-jazzy-ros-base \
+#                     ros-jazzy-cv-bridge \
+#                     ros-jazzy-usb-cam \
+#                     ros-jazzy-tf2-ros \
+#                     ros-jazzy-rqt-image-view \
+#                     python3-colcon-common-extensions
+# =============================================================
+
+
+# ── 计算机视觉 ─────────────────────────────────────────────────
+opencv-python>=4.8.0      # cv2：图像处理、HSV 检测、绘图
+numpy>=1.24.0             # 数组运算、矩阵变换、IK 计算
+
+
+# ── Web 仪表盘 ──────────────────────────────────────────────────
+flask>=3.0.0              # arm_dashboard：MJPEG 流 + REST API
+
+
+# ── 目标检测（YOLO 节点专用，可选） ──────────────────────────────
+ultralytics>=8.0.0        # yolo_detector.py：YOLOv8 推理
+
+
+# ── 科学计算（手眼标定专用） ────────────────────────────────────
+scipy>=1.11.0             # hand_eye_calibration.py：旋转矩阵转换
+
+
+# ── 配置文件解析 ────────────────────────────────────────────────
+PyYAML>=6.0               # hand_eye_calibration.py：读写标定结果 YAML
+
+
+# ── 构建工具 ────────────────────────────────────────────────────
+setuptools>=68.0.0        # ROS2 ament_python 构建必须

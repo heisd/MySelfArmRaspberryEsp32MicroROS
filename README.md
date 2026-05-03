@@ -100,29 +100,42 @@ git clone https://github.com/heisd/MySelfArmRaspberryEsp32MicroROS.git
 cd MySelfArmRaspberryEsp32MicroROS
 ```
 
-### 2. 安装依赖
+### 2. 安装 ROS2 系统依赖
 
 ```bash
-# ROS2 包
 sudo apt install ros-jazzy-usb-cam ros-jazzy-cv-bridge \
                  ros-jazzy-tf2-ros ros-jazzy-rqt-image-view \
-                 python3-opencv python3-numpy
-
-# Web 仪表盘
-pip install flask --break-system-packages
-
-# YOLO 目标检测（可选）
-pip install ultralytics --break-system-packages
+                 python3-colcon-common-extensions
 ```
 
-### 3. 构建 ROS2 包
+### 3. 创建虚拟环境并安装 Python 依赖
+
+> **必须使用 `--system-site-packages`**，否则虚拟环境无法访问 ROS2 系统包（rclpy 等）。
+
+```bash
+# 方式一：一键脚本
+bash scripts/setup_venv.sh
+
+# 方式二：手动
+python3 -m venv --system-site-packages .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+激活虚拟环境（每次开新终端时执行）：
+
+```bash
+source .venv/bin/activate
+```
+
+### 5. 构建 ROS2 包
 
 ```bash
 colcon build --symlink-install
 source install/setup.bash
 ```
 
-### 4. 烧录 ESP32-S3 固件
+### 6. 烧录 ESP32-S3 固件
 
 ```bash
 # 从模板创建配置文件，填入真实 WiFi 和树莓派 IP
@@ -130,13 +143,13 @@ cp firmware/arduino/config.h.example firmware/arduino/config.h
 # 用 Arduino IDE 打开并烧录 firmware/arduino/Arduino.ino
 ```
 
-### 5. 下载 YOLO 模型（可选）
+### 7. 下载 YOLO 模型（可选）
 
 ```bash
 python3 scripts/download_yolov8n.py
 ```
 
-### 6. 启动系统
+### 8. 启动系统
 
 ```bash
 # 一键启动：摄像头 + 检测抓取节点 + Web 仪表盘
