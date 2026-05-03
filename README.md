@@ -102,6 +102,9 @@ sudo apt install ros-jazzy-usb-cam ros-jazzy-cv-bridge \
 
 # YOLO 支持（可选）
 pip install ultralytics --break-system-packages
+
+# Web 仪表盘支持
+pip install flask --break-system-packages
 ```
 
 ### 3. 下载 YOLOv8 模型（可选）

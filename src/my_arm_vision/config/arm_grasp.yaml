@@ -1,0 +1,52 @@
+arm_grasp_node:
+  ros__parameters:
+    # 检测目标颜色：red / green / blue / yellow / orange
+    target_color: red
+    min_area: 500
+    max_area: 50000
+
+    # 相机内参（若有 /camera/camera_info 话题会自动覆盖）
+    fx: 600.0
+    fy: 600.0
+    cx: 320.0
+    cy: 240.0
+
+    # 相机安装位置，相对机械臂基座（米）
+    # 假设摄像头固定在基座正上方、俯视工作台
+    cam_x: 0.0
+    cam_y: 0.20
+    cam_z: 0.40
+
+    # 物体在桌面上的高度（米）
+    object_height: 0.02
+
+    # 机械臂连杆参数（米），根据实际 URDF 调整
+    link_base: 0.08   # 底座到肩关节的高度
+    link1:     0.10   # 大臂
+    link2:     0.10   # 小臂
+    link3:     0.06   # 腕部到夹爪中心
+
+    # 各关节舵机零点偏移（度）
+    # IK 计算角度 + offset = 发送给 PCA9685 的舵机角度
+    # 将机械臂移到 home 位置，各舵机输出 90° 时调整此值
+    joint_offsets: [90, 90, 90, 90]
+
+    # 夹爪配置（PCA9685 通道号 & 角度）
+    gripper_channel: 4
+    gripper_open:   90
+    gripper_close:  20
+
+    # 放置目标坐标（基座坐标系，米）
+    place_x: 0.15
+    place_y: 0.12
+
+    # 运动参数
+    approach_height: 0.08   # 接近目标时在其正上方的高度
+    lift_height:     0.10   # 提起物体后的高度
+    move_duration:   2.0    # 每段运动等待时间（秒），视舵机速度调整
+    grasp_duration:  1.0    # 夹爪关闭后等待时间
+
+arm_dashboard:
+  ros__parameters:
+    host: "0.0.0.0"
+    port: 5000

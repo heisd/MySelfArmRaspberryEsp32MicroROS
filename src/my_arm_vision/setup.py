@@ -22,8 +22,10 @@ setup(
     license='MIT',
     entry_points={
         'console_scripts': [
-            'object_detector = my_arm_vision.object_detector:main',
+            'object_detector   = my_arm_vision.object_detector:main',
             'simple_visual_grasp = my_arm_vision.demo:main',
+            'arm_grasp         = my_arm_vision.arm_grasp_node:main',
+            'arm_dashboard     = my_arm_vision.arm_dashboard:main',
         ],
     },
 )
