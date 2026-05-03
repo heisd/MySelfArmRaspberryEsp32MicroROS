@@ -7,9 +7,8 @@ import os
 
 
 def generate_launch_description():
-    pkg_share = get_package_share_directory('my_arm_vision')
-    detector_config = os.path.join(pkg_share, 'config', 'object_detector.yaml')
-    grasp_config = os.path.join(pkg_share, 'config', 'visual_grasp.yaml')
+    pkg_share  = get_package_share_directory('my_arm_vision')
+    grasp_cfg  = os.path.join(pkg_share, 'config', 'arm_grasp.yaml')
 
     return LaunchDescription([
         DeclareLaunchArgument(
@@ -17,8 +16,13 @@ def generate_launch_description():
             default_value='/dev/video0',
             description='USB 摄像头设备路径'
         ),
+        DeclareLaunchArgument(
+            'target_color',
+            default_value='red',
+            description='初始检测颜色: red/green/blue/yellow/orange'
+        ),
 
-        # 1. micro-ROS Agent（串口模式）
+        # 1. micro-ROS Agent（串口，驱动 ESP32）
         Node(
             package='micro_ros_agent',
             executable='micro_ros_agent',
@@ -32,46 +36,40 @@ def generate_launch_description():
             executable='usb_cam_node_exe',
             parameters=[{
                 'video_device': LaunchConfiguration('camera_device'),
-                'image_width': 640,
+                'image_width':  640,
                 'image_height': 480,
-                'framerate': 30.0,
+                'framerate':    30.0,
                 'pixel_format': 'mjpeg',
             }],
-            remappings=[
-                ('image_raw', '/camera/image_raw'),
-            ]
+            remappings=[('image_raw', '/camera/image_raw')]
         ),
 
-        # 3. 物体检测节点（延迟 2s 等待摄像头就绪）
+        # 3. 物体检测 + 抓取控制节点（延迟 2s 等待摄像头）
         TimerAction(
             period=2.0,
             actions=[
                 Node(
                     package='my_arm_vision',
-                    executable='object_detector',
-                    parameters=[detector_config],
+                    executable='arm_grasp',
+                    parameters=[
+                        grasp_cfg,
+                        {'target_color': LaunchConfiguration('target_color')},
+                    ],
                     output='screen'
                 ),
             ]
         ),
 
-        # 4. 视觉抓取控制器（延迟 3s 等待检测节点就绪）
+        # 4. Web 仪表盘（延迟 2.5s）
         TimerAction(
-            period=3.0,
+            period=2.5,
             actions=[
                 Node(
                     package='my_arm_vision',
-                    executable='simple_visual_grasp',
-                    parameters=[grasp_config],
+                    executable='arm_dashboard',
+                    parameters=[grasp_cfg],
                     output='screen'
                 ),
             ]
-        ),
-
-        # 5. 调试图像查看
-        Node(
-            package='rqt_image_view',
-            executable='rqt_image_view',
-            arguments=['/grasp_debug_image'],
         ),
     ])
